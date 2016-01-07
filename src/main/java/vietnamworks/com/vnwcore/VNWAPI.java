@@ -44,7 +44,7 @@ public class VNWAPI {
     }
 
     public static void searchJob(int page_index, int page_size, @NonNull String job_title, String job_location, String job_category, Callback callback) {
-        HashMap<String, String> input = new HashMap<>();
+        HashMap<String, Object> input = new HashMap<>();
         input.put("job_title", job_title);
         if (job_location != null && !job_location.isEmpty()) {
             input.put("job_location", job_location);
@@ -52,6 +52,13 @@ public class VNWAPI {
         if (job_category != null && !job_category.isEmpty()) {
             input.put("job_category", job_category);
         }
+        if (page_index >= 0) {
+            input.put("page_number", page_index);
+        }
+        if (page_size > 0) {
+            input.put("page_size", page_size);
+        }
+
         VolleyHelper.post(context, isProduction?productionServer:stagingServer + API_JOB_SEARCH, header, input, callback);
     }
 
