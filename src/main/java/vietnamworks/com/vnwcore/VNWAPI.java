@@ -3,9 +3,13 @@ package vietnamworks.com.vnwcore;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import org.json.JSONArray;
+
 import java.util.HashMap;
 
 import R.helper.Callback;
+import R.helper.CallbackResult;
+import R.helper.CallbackSuccess;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
@@ -53,5 +57,28 @@ public class VNWAPI {
 
     public static void searchJob(int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
         searchJob(0, max_record, job_title, job_location, job_category, callback);
+    }
+
+    public static void jobTitleSuggestion(@NonNull String jobTitle, final Callback callback) {
+        HashMap<String, String> m = new HashMap<>();
+        m.put("query", jobTitle);
+
+        VolleyHelper.stringRequest(context, "http://www.vietnamworks.com/jobseekers/job_title_auto_completed_ajax.php", null, m, new Callback() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (result.hasError()) {
+                    callback.onCompleted(context, new CallbackResult(result.getError()));
+                } else {
+                    Object re = result.getData();
+                    try {
+                        String str = (String)re;
+                        JSONArray jArray = new JSONArray(str);
+                        callback.onCompleted(context, new CallbackSuccess(jArray));
+                    } catch (Exception E) {
+                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, E.getMessage())));
+                    }
+                }
+            }
+        });
     }
 }
