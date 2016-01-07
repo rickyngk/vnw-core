@@ -1,5 +1,5 @@
 # vnw-core
-Some utility function for Vietnamworks based project. 
+Some utility functions for Vietnamworks based project. 
 
 ##Dependency: 
 
