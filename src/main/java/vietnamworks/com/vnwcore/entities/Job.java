@@ -50,4 +50,8 @@ public class Job extends BaseEntity {
     public String getJobTitle() {
         return getString(JobField.JOB_TITLE, "");
     }
+
+    public String getCompany() {
+        return getString(JobField.JOB_COMPANY, "");
+    }
 }
