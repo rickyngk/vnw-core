@@ -10,6 +10,7 @@ import java.util.HashMap;
 import R.helper.Callback;
 import R.helper.CallbackResult;
 import R.helper.CallbackSuccess;
+import R.helper.Common;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
@@ -17,7 +18,7 @@ import vietnamworks.com.volleyhelper.VolleyHelper;
  */
 public class VNWAPI {
     private final static String productionServer = "https://api.vietnamworks.com";
-    private final static String stagingServer = "https://api-staging.vietnamworks.com";
+    private final static String stagingServer = "https://172.16.22.38"; //https://api-staging.vietnamworks.com";
 
     private final static String API_JOB_SEARCH = "/jobs/search";
 
@@ -32,6 +33,9 @@ public class VNWAPI {
         VNWAPI.productionKey = productionKey;
         VNWAPI.context = ctx;
         setProductionMode(isProduction);
+        if (!isProduction) {
+            Common.acceptAllSSL();
+        }
     }
 
     public static void setProductionMode(boolean isProduction) {
