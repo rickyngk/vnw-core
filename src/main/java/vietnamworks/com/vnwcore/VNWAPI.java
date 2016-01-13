@@ -26,13 +26,11 @@ public class VNWAPI {
     private static String stagingKey;
     private static String productionKey;
     private static HashMap<String, String> header = new HashMap<>();
-    private static Context context;
     private static Boolean isProduction;
 
-    public static void init(Context ctx, String stagingKey, String productionKey, boolean isProduction) {
+    public static void init(String stagingKey, String productionKey, boolean isProduction) {
         VNWAPI.stagingKey = stagingKey;
         VNWAPI.productionKey = productionKey;
-        VNWAPI.context = ctx;
         setProductionMode(isProduction);
         if (!isProduction) {
             Common.acceptAllSSL();
@@ -48,7 +46,7 @@ public class VNWAPI {
         }
     }
 
-    public static void searchJob(int page_index, int page_size, @NonNull String job_title, String job_location, String job_category, Callback callback) {
+    public static void searchJob(Context ctx, int page_index, int page_size, @NonNull String job_title, String job_location, String job_category, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
         input.put("job_title", job_title);
         if (job_location != null && !job_location.isEmpty()) {
@@ -64,18 +62,18 @@ public class VNWAPI {
             input.put("page_size", page_size);
         }
 
-        VolleyHelper.post(context, isProduction?productionServer:stagingServer + API_JOB_SEARCH, header, input, callback);
+        VolleyHelper.post(ctx, isProduction?productionServer:stagingServer + API_JOB_SEARCH, header, input, callback);
     }
 
-    public static void searchJob(int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
-        searchJob(0, max_record, job_title, job_location, job_category, callback);
+    public static void searchJob(Context ctx, int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
+        searchJob(ctx, 0, max_record, job_title, job_location, job_category, callback);
     }
 
-    public static void jobTitleSuggestion(@NonNull String jobTitle, final Callback callback) {
+    public static void jobTitleSuggestion(Context ctx, @NonNull String jobTitle, final Callback callback) {
         HashMap<String, String> m = new HashMap<>();
         m.put("query", jobTitle);
 
-        VolleyHelper.stringRequest(context, "http://www.vietnamworks.com/jobseekers/job_title_auto_completed_ajax.php", null, m, new Callback() {
+        VolleyHelper.stringRequest(ctx, "http://www.vietnamworks.com/jobseekers/job_title_auto_completed_ajax.php", null, m, new Callback() {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (result.hasError()) {
@@ -94,8 +92,8 @@ public class VNWAPI {
         });
     }
 
-    public static void getJob(@NonNull String job_id, Callback callback) {
+    public static void getJob(Context ctx, @NonNull String job_id, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
-        VolleyHelper.post(context, isProduction ? productionServer : stagingServer + String.format(API_JOB_VIEW, job_id), header, input, callback);
+        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + String.format(API_JOB_VIEW, job_id), header, input, callback);
     }
 }
