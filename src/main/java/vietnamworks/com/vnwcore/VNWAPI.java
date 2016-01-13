@@ -18,7 +18,7 @@ import vietnamworks.com.volleyhelper.VolleyHelper;
  */
 public class VNWAPI {
     private final static String productionServer = "https://api.vietnamworks.com";
-    private final static String stagingServer = "https://172.16.22.38"; //https://api-staging.vietnamworks.com";
+    private final static String stagingServer = "https://api-staging.vietnamworks.com";
 
     private final static String API_JOB_SEARCH = "/jobs/search";
 
