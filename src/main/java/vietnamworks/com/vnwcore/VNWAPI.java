@@ -21,6 +21,7 @@ public class VNWAPI {
     private final static String stagingServer = "https://api-staging.vietnamworks.com";
 
     private final static String API_JOB_SEARCH = "/jobs/search";
+    private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
 
     private static String stagingKey;
     private static String productionKey;
@@ -82,7 +83,7 @@ public class VNWAPI {
                 } else {
                     Object re = result.getData();
                     try {
-                        String str = (String)re;
+                        String str = (String) re;
                         JSONArray jArray = new JSONArray(str);
                         callback.onCompleted(context, new CallbackSuccess(jArray));
                     } catch (Exception E) {
@@ -91,5 +92,10 @@ public class VNWAPI {
                 }
             }
         });
+    }
+
+    public static void getJob(@NonNull String job_id, Callback callback) {
+        HashMap<String, Object> input = new HashMap<>();
+        VolleyHelper.post(context, isProduction ? productionServer : stagingServer + String.format(API_JOB_VIEW, job_id), header, input, callback);
     }
 }
