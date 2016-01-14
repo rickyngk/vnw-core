@@ -1,45 +1,149 @@
 package vietnamworks.com.vnwcore.entities;
 
-import R.helper.BaseEntity;
-import R.helper.EntityField;
+import R.helper.BindField;
+import R.helper.EntityX;
 
 /**
  * Created by duynk on 1/7/16.
  */
-public class JobSearchResult extends BaseEntity {
-    @EntityField("job_id") public static String JOB_ID;
-    @EntityField("job_title") public static String JOB_TITLE;
-    @EntityField("job_company") public static String JOB_COMPANY;
-    @EntityField("posted_date") public static String POSTED_DATE;
-    @EntityField("job_location") public static String JOB_LOCATION;
-    @EntityField("job_industry") public static String JOB_INDUSTRY;
-    @EntityField("job_detail_url") public static String JOB_DETAIL_URL;
-    @EntityField("job_logo_url") public static String JOB_LOGO_URL;
-    @EntityField("job_video_url") public static String JOB_VIDEO_URL;
-    @EntityField("salary_min") public static String SALARY_MIN;
-    @EntityField("salary_max") public static String SALARY_MAX;
-    @EntityField("skills") public static String SKILLS;
-    @EntityField("benefits") public static String BENEFITS;
-    @EntityField("views") public static String VIEWS;
-    @EntityField("applied") public static String APPLIED;
+public class JobSearchResult extends EntityX {
+    @BindField("job_id") String id;
+    @BindField("job_title") String title;
+    @BindField("job_company") String company;
+    @BindField("posted_date") String postedDate;
+    @BindField("job_location") String jobLocation;
+    @BindField("job_industry") String industry;
+    @BindField("job_detail_url") String detailURL;
+    @BindField("job_logo_url") String logoURL;
+    @BindField("job_video_url") String videoURL;
+    @BindField("salary_min") int minSalary;
+    @BindField("salary_max") int maxSalary;
+    @BindField("skills") String skills;
+    @BindField("benefits") String benefits;
+    @BindField("views") int views;
+    @BindField("applied") int applied;
 
     public JobSearchResult() {
         super();
     }
 
-    public void setJobTitle(String value) {
-        set(JOB_TITLE, value);
+    public String getId() {
+        return id;
     }
 
-    public String getJobTitle() {
-        return getString(JOB_TITLE, "");
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getCompany() {
-        return getString(JOB_COMPANY, "");
+        return company;
     }
 
-    public String getJobId() {
-        return getString(JOB_ID, "");
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getPostedDate() {
+        return postedDate;
+    }
+
+    public void setPostedDate(String postedDate) {
+        this.postedDate = postedDate;
+    }
+
+    public String getJobLocation() {
+        return jobLocation;
+    }
+
+    public void setJobLocation(String jobLocation) {
+        this.jobLocation = jobLocation;
+    }
+
+    public String getIndustry() {
+        return industry;
+    }
+
+    public void setIndustry(String industry) {
+        this.industry = industry;
+    }
+
+    public String getDetailURL() {
+        return detailURL;
+    }
+
+    public void setDetailURL(String detailURL) {
+        this.detailURL = detailURL;
+    }
+
+    public String getLogoURL() {
+        return logoURL;
+    }
+
+    public void setLogoURL(String logoURL) {
+        this.logoURL = logoURL;
+    }
+
+    public String getVideoURL() {
+        return videoURL;
+    }
+
+    public void setVideoURL(String videoURL) {
+        this.videoURL = videoURL;
+    }
+
+    public int getMinSalary() {
+        return minSalary;
+    }
+
+    public void setMinSalary(int minSalary) {
+        this.minSalary = minSalary;
+    }
+
+    public int getMaxSalary() {
+        return maxSalary;
+    }
+
+    public void setMaxSalary(int maxSalary) {
+        this.maxSalary = maxSalary;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
+    }
+
+    public String getBenefits() {
+        return benefits;
+    }
+
+    public void setBenefits(String benefits) {
+        this.benefits = benefits;
+    }
+
+    public int getViews() {
+        return views;
+    }
+
+    public void setViews(int views) {
+        this.views = views;
+    }
+
+    public int getApplied() {
+        return applied;
+    }
+
+    public void setApplied(int applied) {
+        this.applied = applied;
     }
 }
