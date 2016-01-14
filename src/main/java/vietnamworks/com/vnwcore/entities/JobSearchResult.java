@@ -1,5 +1,7 @@
 package vietnamworks.com.vnwcore.entities;
 
+import java.util.ArrayList;
+
 import R.helper.BindField;
 import R.helper.EntityX;
 
@@ -16,12 +18,14 @@ public class JobSearchResult extends EntityX {
     @BindField("job_detail_url") String detailURL;
     @BindField("job_logo_url") String logoURL;
     @BindField("job_video_url") String videoURL;
+    @BindField("salary") String salary;
     @BindField("salary_min") int minSalary;
     @BindField("salary_max") int maxSalary;
-    @BindField("skills") String skills;
+    @BindField("skills") ArrayList<Skill> skills;
     @BindField("benefits") String benefits;
     @BindField("views") int views;
     @BindField("applied") int applied;
+    @BindField("job_level") String jobLevel;
 
     public JobSearchResult() {
         super();
@@ -59,11 +63,11 @@ public class JobSearchResult extends EntityX {
         this.postedDate = postedDate;
     }
 
-    public String getJobLocation() {
+    public String getLocations() {
         return jobLocation;
     }
 
-    public void setJobLocation(String jobLocation) {
+    public void setLocations(String jobLocation) {
         this.jobLocation = jobLocation;
     }
 
@@ -115,11 +119,11 @@ public class JobSearchResult extends EntityX {
         this.maxSalary = maxSalary;
     }
 
-    public String getSkills() {
+    public ArrayList<Skill> getSkills() {
         return skills;
     }
 
-    public void setSkills(String skills) {
+    public void setSkills(ArrayList<Skill> skills) {
         this.skills = skills;
     }
 
@@ -145,5 +149,29 @@ public class JobSearchResult extends EntityX {
 
     public void setApplied(int applied) {
         this.applied = applied;
+    }
+
+    public String getJobLocation() {
+        return jobLocation;
+    }
+
+    public void setJobLocation(String jobLocation) {
+        this.jobLocation = jobLocation;
+    }
+
+    public String getSalary() {
+        return salary;
+    }
+
+    public void setSalary(String salary) {
+        this.salary = salary;
+    }
+
+    public String getJobLevel() {
+        return jobLevel;
+    }
+
+    public void setJobLevel(String jobLevel) {
+        this.jobLevel = jobLevel;
     }
 }
