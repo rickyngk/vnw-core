@@ -15,12 +15,13 @@ import vietnamworks.com.vnwcore.VNWAPI;
  * Created by duynk on 1/13/16.
  */
 public class Job extends EntityX {
-
-    @BindField("job_detail") JobDetail jobDetail;
     public Job() {
         super();
     }
 
+    @BindField("job_detail") JobDetail jobDetail;
+    @BindField("job_summary") JobSummary jobSummary;
+    @BindField("job_company") Company company;
 
     public static void loadById(Context ctx, String id, final Callback callback) {
         VNWAPI.getJob(ctx, id, new Callback() {
@@ -49,5 +50,21 @@ public class Job extends EntityX {
 
     public void setJobDetail(JobDetail jobDetail) {
         this.jobDetail = jobDetail;
+    }
+
+    public JobSummary getJobSummary() {
+        return jobSummary;
+    }
+
+    public void setJobSummary(JobSummary jobSummary) {
+        this.jobSummary = jobSummary;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }
