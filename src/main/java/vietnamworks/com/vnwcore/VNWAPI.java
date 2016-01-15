@@ -21,6 +21,7 @@ public class VNWAPI {
     private final static String stagingServer = "https://api-staging.vietnamworks.com";
 
     private final static String API_JOB_SEARCH = "/jobs/search";
+    private final static String API_CONFIG = "/general/configuration";
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
 
     private static String stagingKey;
@@ -95,5 +96,10 @@ public class VNWAPI {
     public static void getJob(Context ctx, @NonNull String job_id, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
         VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + String.format(API_JOB_VIEW, job_id), header, input, callback);
+    }
+
+    public static void getConfiguration(Context ctx, Callback callback) {
+        HashMap<String, Object> input = new HashMap<>();
+        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_CONFIG, header, input, callback);
     }
 }
