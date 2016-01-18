@@ -178,4 +178,16 @@ public class Configuration extends EntityX {
         }
         return instance.jobLevelMapping.get(id);
     }
+
+    public static Language findLanguage(String id) {
+        if (!instance.languageMapping.containsKey(id)) {
+            for (Language l : instance.languages) {
+                if (l.getId().compareTo(id) == 0) {
+                    instance.languageMapping.put(id, l);
+                    break;
+                }
+            }
+        }
+        return instance.languageMapping.get(id);
+    }
 }
