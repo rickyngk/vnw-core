@@ -23,6 +23,7 @@ public class VNWAPI {
     private final static String API_JOB_SEARCH = "/jobs/search";
     private final static String API_CONFIG = "/general/configuration";
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
+    private final static String API_LOGIN = "/users/login";
 
     private static String stagingKey;
     private static String productionKey;
@@ -101,5 +102,12 @@ public class VNWAPI {
     public static void getConfiguration(Context ctx, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
         VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_CONFIG, header, input, callback);
+    }
+
+    public static void login(Context ctx, @NonNull String email,  @NonNull String password, Callback callback) {
+        HashMap<String, Object> input = new HashMap<>();
+        input.put("user_email", email);
+        input.put("user_password", password);
+        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_LOGIN, header, input, callback);
     }
 }
