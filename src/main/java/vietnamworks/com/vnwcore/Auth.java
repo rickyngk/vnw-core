@@ -38,6 +38,8 @@ public class Auth {
     }
 
     private static ArrayList<String> recentEmails = new ArrayList<>();
+    private static vietnamworks.com.vnwcore.entities.Auth auth;
+
     public static void login(Context ctx, final String email, final String password, final Callback callback) {
         if (email == null || email.isEmpty()) {
             callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackError(ELoginError.EMPTY_EMAIL.code, "")));
@@ -56,13 +58,12 @@ public class Auth {
                         try {
                             JSONObject data = (JSONObject) result.getData();
                             if (data.getJSONObject("meta").getString("message").equalsIgnoreCase("OK")) {
-                                vietnamworks.com.vnwcore.entities.Auth auth = new vietnamworks.com.vnwcore.entities.Auth();
+                                auth = new vietnamworks.com.vnwcore.entities.Auth();
                                 auth.importFromJson(data.getJSONObject("data"));
 
                                 LocalStorage.set("vnw_auth_current_account", data);
 
-                                String strRecentEmail = LocalStorage.getString("vnw_auth_recent_emails", "");
-                                strRecentEmail = strRecentEmail + ";" + email;
+                                LocalStorage.set("vnw_auth_recent_emails", LocalStorage.getString("vnw_auth_recent_emails", "") + ";" + email);
                                 recentEmails.clear();
                                 getRecentEmails();
 
@@ -105,6 +106,7 @@ public class Auth {
     public static void logout() {
         LocalStorage.remove("vnw_auth_current_account");
         LocalStorage.remove("vnw_auth_current_credential");
+        auth = null;
     }
 
     public static ArrayList<String> getRecentEmails() {
@@ -113,7 +115,9 @@ public class Auth {
             String []emails = strRecentEmail.split(";");
             HashMap<String, String> emailHash = new HashMap<String, String>();
             for (String e: emails) {
-                emailHash.put(e, "");
+                if (e != null && e.isEmpty()) {
+                    emailHash.put(e, "");
+                }
             }
             StringBuilder sb = new StringBuilder();
             recentEmails = new ArrayList<String>();
@@ -127,5 +131,9 @@ public class Auth {
             LocalStorage.set("vnw_auth_recent_emails", sb.toString());
         }
         return recentEmails;
+    }
+
+    public static vietnamworks.com.vnwcore.entities.Auth getAuthData() {
+        return auth;
     }
 }
