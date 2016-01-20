@@ -5,10 +5,12 @@ import android.content.Context;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 
 import R.helper.Callback;
 import R.helper.CallbackResult;
+import R.helper.CallbackSuccess;
+import R.helper.CodecX;
 import R.helper.Common;
 import R.helper.LocalStorage;
 
@@ -60,16 +62,25 @@ public class Auth {
                                 LocalStorage.set("vnw_auth_current_account", data);
 
                                 String strRecentEmail = LocalStorage.getString("vnw_auth_recent_emails", "");
-                                StringBuilder sb = new StringBuilder(strRecentEmail);
-                                if (strRecentEmail.length() > 0) {
-                                    sb.append(";");
+                                String []emails = strRecentEmail.split(";");
+                                HashMap<String, String> emailHash = new HashMap<String, String>();
+                                for (String e: emails) {
+                                    emailHash.put(e, "");
                                 }
-                                sb.append(email);
+                                StringBuilder sb = new StringBuilder();
+                                recentEmails = new ArrayList<String>();
+                                String delim = "";
+                                for (String k: emailHash.keySet()) {
+                                    sb.append(delim);
+                                    sb.append(k);
+                                    recentEmails.add(k);
+                                    delim = ";";
+                                }
                                 LocalStorage.set("vnw_auth_recent_emails", sb.toString());
-                                recentEmails = new ArrayList<String>(Arrays.asList(strRecentEmail.split(";")));
 
-                                String epassword = codec.encode(password);
+                                String epassword = CodecX.encode(password);
                                 LocalStorage.set("vnw_auth_current_credential", email + ";" + epassword);
+                                callback.onCompleted(context, new CallbackSuccess());
                             } else {
                                 if (data.getJSONObject("meta").getString("code").equalsIgnoreCase("200")) {
                                     callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(ELoginError.WRONG_CREDENTIAL.code, "")));
@@ -94,7 +105,7 @@ public class Auth {
             int split_index = credential.indexOf(";");
             String email = credential.substring(0, split_index);
             String epassword = credential.substring(split_index + 1, credential.length());
-            String password = codec.decode(epassword);
+            String password = CodecX.decode(epassword);
             if (password == null || password.isEmpty() || email.isEmpty()) {
                 callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackError(-2, "")));
             } else {
