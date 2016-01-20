@@ -62,21 +62,9 @@ public class Auth {
                                 LocalStorage.set("vnw_auth_current_account", data);
 
                                 String strRecentEmail = LocalStorage.getString("vnw_auth_recent_emails", "");
-                                String []emails = strRecentEmail.split(";");
-                                HashMap<String, String> emailHash = new HashMap<String, String>();
-                                for (String e: emails) {
-                                    emailHash.put(e, "");
-                                }
-                                StringBuilder sb = new StringBuilder();
-                                recentEmails = new ArrayList<String>();
-                                String delim = "";
-                                for (String k: emailHash.keySet()) {
-                                    sb.append(delim);
-                                    sb.append(k);
-                                    recentEmails.add(k);
-                                    delim = ";";
-                                }
-                                LocalStorage.set("vnw_auth_recent_emails", sb.toString());
+                                strRecentEmail = strRecentEmail + ";" + email;
+                                recentEmails.clear();
+                                getRecentEmails();
 
                                 String epassword = CodecX.encode(password);
                                 LocalStorage.set("vnw_auth_current_credential", email + ";" + epassword);
@@ -114,7 +102,30 @@ public class Auth {
         }
     }
 
-    public static void logout(Callback callback) {
+    public static void logout() {
+        LocalStorage.remove("vnw_auth_current_account");
+        LocalStorage.remove("vnw_auth_current_credential");
+    }
 
+    public static ArrayList<String> getRecentEmails() {
+        if (recentEmails == null || recentEmails.isEmpty()) {
+            String strRecentEmail = LocalStorage.getString("vnw_auth_recent_emails", "");
+            String []emails = strRecentEmail.split(";");
+            HashMap<String, String> emailHash = new HashMap<String, String>();
+            for (String e: emails) {
+                emailHash.put(e, "");
+            }
+            StringBuilder sb = new StringBuilder();
+            recentEmails = new ArrayList<String>();
+            String delim = "";
+            for (String k: emailHash.keySet()) {
+                sb.append(delim);
+                sb.append(k);
+                recentEmails.add(k);
+                delim = ";";
+            }
+            LocalStorage.set("vnw_auth_recent_emails", sb.toString());
+        }
+        return recentEmails;
     }
 }
