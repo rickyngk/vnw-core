@@ -16,8 +16,6 @@ public class JobDetail extends EntityX {
     @BindField("skills") ArrayList<Skill> skills;
     @BindField("saved") int saved;
     @BindField("applied") int applied;
-    @BindField("required_resume") boolean requiredResume;
-    @BindField("required_cover_letter") boolean requiredCoverLetter;
 
     public JobDetail() {
         super();
@@ -77,21 +75,5 @@ public class JobDetail extends EntityX {
 
     public void setApplied(int applied) {
         this.applied = applied;
-    }
-
-    public boolean isRequiredResume() {
-        return requiredResume;
-    }
-
-    public void setRequiredResume(boolean requiredResume) {
-        this.requiredResume = requiredResume;
-    }
-
-    public boolean isRequiredCoverLetter() {
-        return requiredCoverLetter;
-    }
-
-    public void setRequiredCoverLetter(boolean requiredCoverLetter) {
-        this.requiredCoverLetter = requiredCoverLetter;
     }
 }
