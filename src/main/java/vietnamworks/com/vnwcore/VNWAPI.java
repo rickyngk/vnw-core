@@ -5,12 +5,14 @@ import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
 
+import java.io.File;
 import java.util.HashMap;
 
 import R.helper.Callback;
 import R.helper.CallbackResult;
 import R.helper.CallbackSuccess;
 import R.helper.Common;
+import vietnamworks.com.vnwcore.entities.JobApplyForm;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
@@ -24,6 +26,8 @@ public class VNWAPI {
     private final static String API_CONFIG = "/general/configuration";
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
     private final static String API_LOGIN = "/users/login";
+
+    private final static String API_APPLY = "/jobs/applyAttach/token/%1$s";
 
     private static String stagingKey;
     private static String productionKey;
@@ -109,5 +113,32 @@ public class VNWAPI {
         input.put("user_email", email);
         input.put("user_password", password);
         VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_LOGIN, header, input, callback);
+    }
+
+    public static void applyJob(Context context, JobApplyForm form, Callback callback) {
+        if (form.getFileContents() != null) {
+            File f = new File(form.getFileContents());
+            if (f.isFile()) {
+                HashMap<String, Object> input = new HashMap<>();
+                if (form.getApplicationSubject() != null) {
+                    input.put("application_subject", form.getApplicationSubject());
+                }
+                if (form.getCoverLetter() != null) {
+                    input.put("cover_letter", form.getCoverLetter());
+                }
+                if (form.getLang() != null) {
+                    input.put("lang", form.getLang());
+                }
+                if (form.getJobId() != null) {
+                    input.put("job_id", form.getJobId());
+                }
+                VolleyHelper.postMultiPart(context, isProduction ? productionServer : stagingServer + String.format(API_APPLY, form.getToken()), header, "file_contents", f, input, callback);
+            } else {
+                callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, "Invalid file")));
+            }
+        } else {
+            //TODO: apply job with old resume
+            callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, "Not support yet")));
+        }
     }
 }

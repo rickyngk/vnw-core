@@ -13,6 +13,7 @@ public class JobApplyForm extends EntityX {
     @BindField("application_subject") String applicationSubject;
     @BindField("cover_letter") String coverLetter;
     @BindField("lang") Integer lang;
+    @BindField("token") String token;
 
     public JobApplyForm(){super();}
 
@@ -62,5 +63,13 @@ public class JobApplyForm extends EntityX {
 
     public void setLang(Integer lang) {
         this.lang = lang;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
