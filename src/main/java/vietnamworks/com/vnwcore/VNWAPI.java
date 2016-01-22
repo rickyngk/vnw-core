@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import R.helper.Callback;
 import R.helper.CallbackError;
@@ -16,6 +17,7 @@ import R.helper.CallbackSuccess;
 import R.helper.Common;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
 import vietnamworks.com.vnwcore.errors.EApplyJobError;
+import vietnamworks.com.vnwcore.matchingscore.MatchingScoreTable;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
@@ -32,6 +34,8 @@ public class VNWAPI {
     private final static String API_LOGOUT = "/users/logout/token/%s";
 
     private final static String API_APPLY = "/jobs/applyAttach";
+
+    private final static String API_MATCHING_SCORE = "/jobs/matching-score";
 
     private static String stagingKey;
     private static String productionKey;
@@ -187,5 +191,44 @@ public class VNWAPI {
             //TODO: apply job with old resume
             callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, "Not support yet"));
         }
+    }
+
+    public static void loadMatchingScore(Context ctx,@NonNull final String[] jobs, @NonNull final String userId, Callback callback) {
+        StringBuilder sb = new StringBuilder();
+        String delim = "/?";
+        for (String job:jobs) {
+            sb.append(delim);
+            sb.append("jobId[]=");
+            sb.append(job);
+            delim = "&";
+            MatchingScoreTable.create(userId, job);
+        }
+        sb.append("&userId=" + userId);
+        String url = (isProduction ? productionServer : stagingServer) + API_MATCHING_SCORE + sb.toString();
+        VolleyHelper.get(ctx, url, new Callback() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (!result.hasError()) {
+                    try {
+                        JSONObject data = ((JSONObject)result.getData()).getJSONObject("data").getJSONObject("matchingScore");
+                        Iterator<String> it = data.keys();
+                        while (it.hasNext()) {
+                            String job = it.next();
+                            Integer score = data.getInt(job);
+                            MatchingScoreTable.update(userId, job, score);
+                        }
+                    } catch (Exception E) {
+                        E.printStackTrace();
+                        for (String j: jobs) {
+                            MatchingScoreTable.reset(userId, j);
+                        }
+                    }
+                } else {
+                    for (String j: jobs) {
+                        MatchingScoreTable.reset(userId, j);
+                    }
+                }
+            }
+        });
     }
 }
