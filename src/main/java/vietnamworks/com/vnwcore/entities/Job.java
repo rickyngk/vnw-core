@@ -37,7 +37,7 @@ public class Job extends EntityX {
                         j.importFromJson(data);
                         callback.onCompleted(context, new CallbackSuccess(j));
                     } catch (Exception E) {
-                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, E.getMessage())));
+                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
                     }
                 }
             }

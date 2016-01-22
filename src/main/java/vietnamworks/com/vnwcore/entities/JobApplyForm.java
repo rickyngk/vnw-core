@@ -14,6 +14,7 @@ public class JobApplyForm extends EntityX {
     @BindField("cover_letter") String coverLetter;
     @BindField("lang") Integer lang;
     @BindField("token") String token;
+    @BindField("credential") Credential credential;
 
     public JobApplyForm(){super();}
 
@@ -71,5 +72,13 @@ public class JobApplyForm extends EntityX {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public Credential getCredential() {
+        return credential;
+    }
+
+    public void setCredential(Credential credential) {
+        this.credential = credential;
     }
 }

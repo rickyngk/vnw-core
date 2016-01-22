@@ -87,7 +87,7 @@ public class Configuration extends EntityX {
                             LocalStorage.set("vnw_api_config", instance);
                             callback.onCompleted(ctx, new CallbackSuccess(instance));
                         } catch (Exception E) {
-                            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackError(-1, E.getMessage())));
+                            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
                         }
                     }
                 }

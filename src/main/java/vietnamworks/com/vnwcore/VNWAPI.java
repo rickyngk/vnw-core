@@ -4,15 +4,18 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.HashMap;
 
 import R.helper.Callback;
+import R.helper.CallbackError;
 import R.helper.CallbackResult;
 import R.helper.CallbackSuccess;
 import R.helper.Common;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
+import vietnamworks.com.vnwcore.errors.EApplyJobError;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
@@ -27,7 +30,7 @@ public class VNWAPI {
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
     private final static String API_LOGIN = "/users/login";
 
-    private final static String API_APPLY = "/jobs/applyAttach/token/%1$s";
+    private final static String API_APPLY = "/jobs/applyAttach";
 
     private static String stagingKey;
     private static String productionKey;
@@ -91,7 +94,7 @@ public class VNWAPI {
                         JSONArray jArray = new JSONArray(str);
                         callback.onCompleted(context, new CallbackSuccess(jArray));
                     } catch (Exception E) {
-                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, E.getMessage())));
+                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
                     }
                 }
             }
@@ -115,7 +118,7 @@ public class VNWAPI {
         VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_LOGIN, header, input, callback);
     }
 
-    public static void applyJob(Context context, JobApplyForm form, Callback callback) {
+    public static void applyJob(Context context, JobApplyForm form, final Callback callback) {
         if (form.getFileContents() != null) {
             File f = new File(form.getFileContents());
             if (f.isFile()) {
@@ -127,18 +130,56 @@ public class VNWAPI {
                     input.put("cover_letter", form.getCoverLetter());
                 }
                 if (form.getLang() != null) {
-                    input.put("lang", form.getLang());
+                    input.put("lang", form.getLang().toString());
                 }
                 if (form.getJobId() != null) {
-                    input.put("job_id", form.getJobId());
+                    input.put("job_id", form.getJobId().toString());
                 }
-                VolleyHelper.postMultiPart(context, isProduction ? productionServer : stagingServer + String.format(API_APPLY, form.getToken()), header, "file_contents", f, input, callback);
+                input.put("email", form.getCredential().getEmail());
+                input.put("password", form.getCredential().getPassword());
+
+                //String url = "http://172.18.5.124/test.php";
+                String url = (isProduction ? productionServer : stagingServer) + API_APPLY;
+                VolleyHelper.postMultiPart(context, url, header, "file_contents", f, input, new Callback() {
+                    @Override
+                    public void onCompleted(Context context, CallbackResult result) {
+                        if (result.hasError()) {
+                            String message = "";
+                            try {
+                                String tmpMessage = result.getError().getMessage();
+                                JSONObject json = new JSONObject(tmpMessage);
+                                JSONObject meta = json.getJSONObject("meta");
+                                message = meta.getString("message");
+                            } catch (Exception E) {message = "";}
+                            if (message.isEmpty()) {
+                                callback.onCompleted(context, new CallbackError(result.getError()));
+                            } else {
+                                callback.onCompleted(context, new CallbackError(result.getError().getCode(), message));
+                            }
+                        } else {
+                            try {
+                                JSONObject json = new JSONObject(result.getData().toString());
+                                JSONObject data = json.getJSONObject("data");
+                                String newToken = "";
+                                if (data.has("login_token")) {
+                                    newToken = data.getString("login_token");
+                                }
+                                if (!newToken.isEmpty()) {
+                                    Auth.getAuthData().getProfile().setLoginToken(newToken);
+                                }
+                                callback.onCompleted(context, new CallbackSuccess());
+                            }catch (Exception E) {
+                                callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, E.getMessage()));
+                            }
+                        }
+                    }
+                });
             } else {
-                callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, "Invalid file")));
+                callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN,  "Invalid file"));
             }
         } else {
             //TODO: apply job with old resume
-            callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackError(-1, "Not support yet")));
+            callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, "Not support yet"));
         }
     }
 }
