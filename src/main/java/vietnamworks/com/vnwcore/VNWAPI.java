@@ -29,6 +29,7 @@ public class VNWAPI {
     private final static String API_CONFIG = "/general/configuration";
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
     private final static String API_LOGIN = "/users/login";
+    private final static String API_LOGOUT = "/users/logout/token/%s";
 
     private final static String API_APPLY = "/jobs/applyAttach";
 
@@ -71,7 +72,7 @@ public class VNWAPI {
             input.put("page_size", page_size);
         }
 
-        VolleyHelper.post(ctx, isProduction?productionServer:stagingServer + API_JOB_SEARCH, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction?productionServer:stagingServer) + API_JOB_SEARCH, header, input, callback);
     }
 
     public static void searchJob(Context ctx, int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
@@ -103,19 +104,24 @@ public class VNWAPI {
 
     public static void getJob(Context ctx, @NonNull String job_id, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
-        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + String.format(API_JOB_VIEW, job_id), header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + String.format(API_JOB_VIEW, job_id), header, input, callback);
     }
 
     public static void getConfiguration(Context ctx, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
-        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_CONFIG, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_CONFIG, header, input, callback);
+    }
+
+    public static void logout(Context ctx, @NonNull String token,  Callback callback) {
+        HashMap<String, Object> input = new HashMap<>();
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + String.format(API_LOGOUT, token), header, input, callback);
     }
 
     public static void login(Context ctx, @NonNull String email,  @NonNull String password, Callback callback) {
         HashMap<String, Object> input = new HashMap<>();
         input.put("user_email", email);
         input.put("user_password", password);
-        VolleyHelper.post(ctx, isProduction ? productionServer : stagingServer + API_LOGIN, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_LOGIN, header, input, callback);
     }
 
     public static void applyJob(Context context, JobApplyForm form, final Callback callback) {
