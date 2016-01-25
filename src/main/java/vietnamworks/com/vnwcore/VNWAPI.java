@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -96,8 +97,12 @@ public class VNWAPI {
                     Object re = result.getData();
                     try {
                         String str = (String) re;
-                        JSONArray jArray = new JSONArray(str);
-                        callback.onCompleted(context, new CallbackSuccess(jArray));
+                        JSONArray jArray = new JSONObject(str).getJSONArray("jobTitle");
+                        ArrayList<String> arr = new ArrayList<String>();
+                        for (int i = 0; i < jArray.length(); i++) {
+                            arr.add(jArray.get(i).toString());
+                        }
+                        callback.onCompleted(context, new CallbackSuccess(arr));
                     } catch (Exception E) {
                         callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
                     }
