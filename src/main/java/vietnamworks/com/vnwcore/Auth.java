@@ -9,7 +9,6 @@ import java.util.HashMap;
 
 import R.helper.Callback;
 import R.helper.CallbackResult;
-import R.helper.CallbackSuccess;
 import R.helper.CodecX;
 import R.helper.Common;
 import R.helper.LocalStorage;
@@ -25,17 +24,17 @@ public class Auth {
 
     public static void login(Context ctx, final String email, final String password, final Callback callback) {
         if (email == null || email.isEmpty()) {
-            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(ELoginError.EMPTY_EMAIL.value(), "")));
+            callback.onCompleted(ctx, CallbackResult.error(ELoginError.EMPTY_EMAIL));
         } else if (!Common.isValidEmail(email)) {
-            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(ELoginError.INVALID_EMAIL.value(), "")));
+            callback.onCompleted(ctx, CallbackResult.error(ELoginError.INVALID_EMAIL));
         } else if (password == null || password.isEmpty()) {
-            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(ELoginError.EMPTY_PASSWORD.value(), "")));
+            callback.onCompleted(ctx, CallbackResult.error(ELoginError.EMPTY_PASSWORD));
         } else {
             VNWAPI.login(ctx, email, password, new Callback() {
                 @Override
                 public void onCompleted(Context context, CallbackResult result) {
                     if (result.hasError()) {
-                        callback.onCompleted(context, new CallbackResult(result.getError()));
+                        callback.onCompleted(context, CallbackResult.error(result.getError()));
                     } else {
                         //save current account;
                         try {
@@ -52,16 +51,16 @@ public class Auth {
 
                                 String epassword = CodecX.encode(password);
                                 LocalStorage.set("vnw_auth_current_credential", email + ";" + epassword);
-                                callback.onCompleted(context, new CallbackSuccess());
+                                callback.onCompleted(context, CallbackResult.success());
                             } else {
                                 if (data.getJSONObject("meta").getString("code").equalsIgnoreCase("200")) {
-                                    callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(ELoginError.WRONG_CREDENTIAL.value(), "")));
+                                    callback.onCompleted(context, CallbackResult.error(ELoginError.WRONG_CREDENTIAL));
                                 } else {
-                                    callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, "")));
+                                    callback.onCompleted(context, CallbackResult.error());
                                 }
                             }
                         } catch (Exception E) {
-                            callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
+                            callback.onCompleted(context, CallbackResult.error(E.getMessage()));
                         }
                     }
                     }
@@ -72,12 +71,12 @@ public class Auth {
     public static void autoLogin(Context ctx, final Callback callback) {
         Credential credential = getCredential();
         if (credential == null) {
-            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, "")));
+            callback.onCompleted(ctx, CallbackResult.error());
         } else {
             String password = credential.getPassword();
             String email = credential.getEmail();
             if (password == null || password.isEmpty() || email.isEmpty()) {
-                callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(-2, "")));
+                callback.onCompleted(ctx, CallbackResult.error());
             } else {
                 login(ctx, email, password, callback);
             }

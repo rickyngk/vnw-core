@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import R.helper.BindField;
 import R.helper.Callback;
 import R.helper.CallbackResult;
-import R.helper.CallbackSuccess;
 import R.helper.EntityX;
 import vietnamworks.com.vnwcore.VNWAPI;
 
@@ -28,16 +27,16 @@ public class Job extends EntityX {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (result.hasError()) {
-                    callback.onCompleted(context, new CallbackResult(result.getError()));
+                    callback.onCompleted(context, CallbackResult.error(result.getError()));
                 } else {
                     try {
                         JSONObject res = (JSONObject) result.getData();
                         JSONObject data = res.optJSONObject("data");
                         Job j = new Job();
                         j.importFromJson(data);
-                        callback.onCompleted(context, new CallbackSuccess(j));
+                        callback.onCompleted(context, CallbackResult.success(j));
                     } catch (Exception E) {
-                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
+                        callback.onCompleted(context, CallbackResult.error(E.getMessage()));
                     }
                 }
             }

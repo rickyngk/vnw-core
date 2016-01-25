@@ -10,7 +10,6 @@ import java.util.HashMap;
 import R.helper.BindField;
 import R.helper.Callback;
 import R.helper.CallbackResult;
-import R.helper.CallbackSuccess;
 import R.helper.Common;
 import R.helper.EntityX;
 import R.helper.LocalStorage;
@@ -64,7 +63,7 @@ public class Configuration extends EntityX {
             try {
                 new Configuration();
                 instance.importFromJson(config);
-                callback.onCompleted(ctx, new CallbackSuccess(instance));
+                callback.onCompleted(ctx, CallbackResult.success(instance));
                 loadCache = true;
             }catch (Exception E) {
                 loadCache = false;
@@ -76,7 +75,7 @@ public class Configuration extends EntityX {
                 @Override
                 public void onCompleted(Context context, CallbackResult result) {
                     if (result.hasError()) {
-                        callback.onCompleted(ctx, new CallbackResult(result.getError()));
+                        callback.onCompleted(ctx, CallbackResult.error(result.getError()));
                     } else {
                         try {
                             new Configuration();
@@ -85,9 +84,9 @@ public class Configuration extends EntityX {
                             instance.importFromJson(data);
                             LocalStorage.set("vnw_api_config_last_update", Common.getMillis());
                             LocalStorage.set("vnw_api_config", instance);
-                            callback.onCompleted(ctx, new CallbackSuccess(instance));
+                            callback.onCompleted(ctx, CallbackResult.success(instance));
                         } catch (Exception E) {
-                            callback.onCompleted(ctx, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
+                            callback.onCompleted(ctx, CallbackResult.error(E.getMessage()));
                         }
                     }
                 }

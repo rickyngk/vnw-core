@@ -12,14 +12,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import R.helper.Callback;
-import R.helper.CallbackError;
 import R.helper.CallbackResult;
-import R.helper.CallbackSuccess;
 import R.helper.Common;
-import R.helper.IIErrorX;
 import vietnamworks.com.vnwcore.entities.AppliedJob;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
-import vietnamworks.com.vnwcore.errors.EApplyJobError;
 import vietnamworks.com.vnwcore.errors.EUserProfileQueryError;
 import vietnamworks.com.vnwcore.matchingscore.MatchingScoreTable;
 import vietnamworks.com.volleyhelper.VolleyHelper;
@@ -94,7 +90,7 @@ public class VNWAPI {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (result.hasError()) {
-                    callback.onCompleted(context, new CallbackResult(result.getError()));
+                    callback.onCompleted(context, CallbackResult.error(result.getError()));
                 } else {
                     Object re = result.getData();
                     try {
@@ -104,9 +100,9 @@ public class VNWAPI {
                         for (int i = 0; i < jArray.length(); i++) {
                             arr.add(jArray.get(i).toString());
                         }
-                        callback.onCompleted(context, new CallbackSuccess(arr));
+                        callback.onCompleted(context, CallbackResult.success(arr));
                     } catch (Exception E) {
-                        callback.onCompleted(context, new CallbackResult(new CallbackResult.CallbackErrorInfo(-1, E.getMessage())));
+                        callback.onCompleted(context, CallbackResult.error(E.getMessage()));
                     }
                 }
             }
@@ -187,27 +183,27 @@ public class VNWAPI {
                                 message = meta.getString("message");
                             } catch (Exception E) {message = "";}
                             if (message.isEmpty()) {
-                                callback.onCompleted(context, new CallbackError(result.getError()));
+                                callback.onCompleted(context, CallbackResult.error(result.getError()));
                             } else {
-                                callback.onCompleted(context, new CallbackError(result.getError().getCode(), message));
+                                callback.onCompleted(context, CallbackResult.error(result.getError()));
                             }
                         } else {
                             try {
                                 JSONObject json = new JSONObject(result.getData().toString());
                                 updateToken(json);
-                                callback.onCompleted(context, new CallbackSuccess());
+                                callback.onCompleted(context, CallbackResult.success());
                             }catch (Exception E) {
-                                callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, E.getMessage()));
+                                callback.onCompleted(context, CallbackResult.error(E.getMessage()));
                             }
                         }
                     }
                 });
             } else {
-                callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN,  "Invalid file"));
+                callback.onCompleted(context, CallbackResult.error("Invalid file"));
             }
         } else {
             //TODO: apply job with old resume
-            callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, "Not support yet"));
+            callback.onCompleted(context, CallbackResult.error("Not support yet"));
         }
     }
 
@@ -252,39 +248,9 @@ public class VNWAPI {
     }
 
 
-    public interface GetAppliedCallback {
-        void onCompleted(Context context, GetAppliedJobsCallbackResult result);
-    }
-
-    public static class GetAppliedJobsCallbackResult extends CallbackResult {
-        public GetAppliedJobsCallbackResult(CallbackErrorInfo error, Object data) {
-            super(error, data);
-        }
-
-        public GetAppliedJobsCallbackResult(CallbackErrorInfo error) {
-            super(error);
-        }
-
-        public static GetAppliedJobsCallbackResult error(int code, String message) {
-            return new GetAppliedJobsCallbackResult(new CallbackErrorInfo(code, message));
-        }
-
-        public static GetAppliedJobsCallbackResult error(IIErrorX code) {
-            return new GetAppliedJobsCallbackResult(new CallbackErrorInfo(code));
-        }
-
-        public static GetAppliedJobsCallbackResult success(ArrayList<AppliedJob> jobs) {
-            return new GetAppliedJobsCallbackResult(null, jobs);
-        }
-
-        public ArrayList<AppliedJob> getAppliedJobs() {
-            return (ArrayList<AppliedJob>)data;
-        }
-    }
-
-    public static void getAppliedJobs(final Context ctx, final GetAppliedCallback callback) {
+    public static void getAppliedJobs(final Context ctx, final Callback callback) {
         if (Auth.getAuthData() == null || Auth.getAuthData().getProfile() == null || Auth.getAuthData().getProfile().getLoginToken() == null || Auth.getAuthData().getProfile().getLoginToken().isEmpty()) {
-            callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(EUserProfileQueryError.UN_AUTH));
+            callback.onCompleted(ctx, CallbackResult.error(EUserProfileQueryError.UN_AUTH));
             return;
         }
         String url = String.format((isProduction ? productionServer : stagingServer) + API_APPLIED_JOBS, Auth.getAuthData().getProfile().getLoginToken());
@@ -302,12 +268,12 @@ public class VNWAPI {
                             j.importFromJson(jobs.getJSONObject(i));
                             appliedJobs.add(j);
                         }
-                        callback.onCompleted(ctx, GetAppliedJobsCallbackResult.success(appliedJobs));
+                        callback.onCompleted(ctx, CallbackResult.success(appliedJobs));
                     } catch (Exception E) {
-                        callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(-1, E.getMessage()));
+                        callback.onCompleted(ctx, CallbackResult.error(E.getMessage()));
                     }
                 } else {
-                    callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(result.getError().getCode(), result.getError().getMessage()));
+                    callback.onCompleted(ctx, CallbackResult.error(result.getError()));
                 }
             }
         });

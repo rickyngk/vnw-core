@@ -1,13 +1,12 @@
 package vietnamworks.com.vnwcore.errors;
 
-import R.helper.IIErrorX;
+import R.helper.CallbackResult;
 
 /**
  * Created by duynk on 1/22/16.
  *
  */
-public enum EApplyJobError implements IIErrorX {
-    UNKNOWN(-1),
+public enum EApplyJobError implements CallbackResult.ICallbackError {
     BAD_REQUEST (400)
 
 
@@ -24,10 +23,13 @@ public enum EApplyJobError implements IIErrorX {
     }
 
     @Override
-    public boolean is(IIErrorX code) {
-        return this.code == code.value();
+    public boolean is(CallbackResult.ICallbackError code) {
+        return this.code == code.getCode();
     }
 
     @Override
-    public int value() {return this.code;}
+    public int getCode() {return this.code;}
+
+    @Override
+    public String getMessage() {return "";}
 }
