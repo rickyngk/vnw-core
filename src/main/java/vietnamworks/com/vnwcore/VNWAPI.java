@@ -205,7 +205,7 @@ public class VNWAPI {
         }
         sb.append("&userId=" + userId);
         String url = (isProduction ? productionServer : stagingServer) + API_MATCHING_SCORE + sb.toString();
-        VolleyHelper.get(ctx, url, new Callback() {
+        VolleyHelper.get(ctx, url, header, new Callback() {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (!result.hasError()) {
