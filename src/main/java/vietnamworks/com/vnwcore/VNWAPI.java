@@ -16,8 +16,11 @@ import R.helper.CallbackError;
 import R.helper.CallbackResult;
 import R.helper.CallbackSuccess;
 import R.helper.Common;
+import R.helper.IIErrorX;
+import vietnamworks.com.vnwcore.entities.AppliedJob;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
 import vietnamworks.com.vnwcore.errors.EApplyJobError;
+import vietnamworks.com.vnwcore.errors.EUserProfileQueryError;
 import vietnamworks.com.vnwcore.matchingscore.MatchingScoreTable;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
@@ -33,10 +36,9 @@ public class VNWAPI {
     private final static String API_JOB_VIEW = "/jobs/view/job_id/%1$s";
     private final static String API_LOGIN = "/users/login";
     private final static String API_LOGOUT = "/users/logout/token/%s";
-
     private final static String API_APPLY = "/jobs/applyAttach";
-
     private final static String API_MATCHING_SCORE = "/jobs/matching-score";
+    private final static String API_APPLIED_JOBS = "/jobs/applied/token/%s";
 
     private static String stagingKey;
     private static String productionKey;
@@ -77,7 +79,7 @@ public class VNWAPI {
             input.put("page_size", page_size);
         }
 
-        VolleyHelper.post(ctx, (isProduction?productionServer:stagingServer) + API_JOB_SEARCH, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_JOB_SEARCH, header, input, callback);
     }
 
     public static void searchJob(Context ctx, int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
@@ -133,6 +135,24 @@ public class VNWAPI {
         VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_LOGIN, header, input, callback);
     }
 
+    private static void updateToken(JSONObject response) {
+        try {
+            if (response != null) {
+                JSONObject data = response.getJSONObject("data");
+                if (data != null) {
+                    String login_token = data.getString("login_token");
+                    if (login_token != null && !login_token.isEmpty()) {
+                        if (Auth.getAuthData() != null && Auth.getAuthData().getProfile() != null) {
+                            Auth.getAuthData().getProfile().setLoginToken(login_token);
+                        }
+                    }
+                }
+            }
+        }catch (Exception E) {
+            E.printStackTrace();
+        }
+    }
+
     public static void applyJob(Context context, JobApplyForm form, final Callback callback) {
         if (form.getFileContents() != null) {
             File f = new File(form.getFileContents());
@@ -174,14 +194,7 @@ public class VNWAPI {
                         } else {
                             try {
                                 JSONObject json = new JSONObject(result.getData().toString());
-                                JSONObject data = json.getJSONObject("data");
-                                String newToken = "";
-                                if (data.has("login_token")) {
-                                    newToken = data.getString("login_token");
-                                }
-                                if (!newToken.isEmpty()) {
-                                    Auth.getAuthData().getProfile().setLoginToken(newToken);
-                                }
+                                updateToken(json);
                                 callback.onCompleted(context, new CallbackSuccess());
                             }catch (Exception E) {
                                 callback.onCompleted(context, new CallbackError(EApplyJobError.UNKNOWN, E.getMessage()));
@@ -208,7 +221,8 @@ public class VNWAPI {
             delim = "&";
             MatchingScoreTable.create(userId, job);
         }
-        sb.append("&userId=" + userId);
+        sb.append("&userId=");
+        sb.append(userId);
         String url = (isProduction ? productionServer : stagingServer) + API_MATCHING_SCORE + sb.toString();
         VolleyHelper.get(ctx, url, header, new Callback() {
             @Override
@@ -232,6 +246,68 @@ public class VNWAPI {
                     for (String j: jobs) {
                         MatchingScoreTable.reset(userId, j);
                     }
+                }
+            }
+        });
+    }
+
+
+    public interface GetAppliedCallback {
+        void onCompleted(Context context, GetAppliedJobsCallbackResult result);
+    }
+
+    public static class GetAppliedJobsCallbackResult extends CallbackResult {
+        public GetAppliedJobsCallbackResult(CallbackErrorInfo error, Object data) {
+            super(error, data);
+        }
+
+        public GetAppliedJobsCallbackResult(CallbackErrorInfo error) {
+            super(error);
+        }
+
+        public static GetAppliedJobsCallbackResult error(int code, String message) {
+            return new GetAppliedJobsCallbackResult(new CallbackErrorInfo(code, message));
+        }
+
+        public static GetAppliedJobsCallbackResult error(IIErrorX code) {
+            return new GetAppliedJobsCallbackResult(new CallbackErrorInfo(code));
+        }
+
+        public static GetAppliedJobsCallbackResult success(ArrayList<AppliedJob> jobs) {
+            return new GetAppliedJobsCallbackResult(null, jobs);
+        }
+
+        public ArrayList<AppliedJob> getAppliedJobs() {
+            return (ArrayList<AppliedJob>)data;
+        }
+    }
+
+    public static void getAppliedJobs(final Context ctx, final GetAppliedCallback callback) {
+        if (Auth.getAuthData() == null || Auth.getAuthData().getProfile() == null || Auth.getAuthData().getProfile().getLoginToken() == null || Auth.getAuthData().getProfile().getLoginToken().isEmpty()) {
+            callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(EUserProfileQueryError.UN_AUTH));
+            return;
+        }
+        String url = String.format((isProduction ? productionServer : stagingServer) + API_APPLIED_JOBS, Auth.getAuthData().getProfile().getLoginToken());
+        VolleyHelper.get(ctx, url, header, new Callback() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (!result.hasError()) {
+                    try {
+                        JSONObject data = (JSONObject)result.getData();
+                        updateToken(data);
+                        JSONArray jobs = data.getJSONObject("data").getJSONArray("jobs");
+                        ArrayList<AppliedJob> appliedJobs = new ArrayList<>();
+                        for (int i = 0; i < jobs.length(); i++) {
+                            AppliedJob j = new AppliedJob();
+                            j.importFromJson(jobs.getJSONObject(i));
+                            appliedJobs.add(j);
+                        }
+                        callback.onCompleted(ctx, GetAppliedJobsCallbackResult.success(appliedJobs));
+                    } catch (Exception E) {
+                        callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(-1, E.getMessage()));
+                    }
+                } else {
+                    callback.onCompleted(ctx, GetAppliedJobsCallbackResult.error(result.getError().getCode(), result.getError().getMessage()));
                 }
             }
         });
