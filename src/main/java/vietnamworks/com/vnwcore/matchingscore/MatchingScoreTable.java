@@ -6,8 +6,6 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import R.helper.Callback;
-import R.helper.CallbackResult;
 import vietnamworks.com.vnwcore.VNWAPI;
 
 /**
@@ -62,11 +60,7 @@ public class MatchingScoreTable {
             }
             re.put(j, instance.data.get(key));
         }
-        VNWAPI.loadMatchingScore(ctx, miss.toArray(new String[miss.size()]), user, new Callback() {
-            @Override
-            public void onCompleted(Context context, CallbackResult result) {
-            }
-        });
+        VNWAPI.loadMatchingScoreAsync(ctx, miss.toArray(new String[miss.size()]), user);
         return re;
     }
 }

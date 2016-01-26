@@ -55,7 +55,7 @@ public class Configuration extends EntityX {
     private HashMap<String, Frequency> frequencyMapping = new HashMap<>();
     private HashMap<String, Language> languageMapping = new HashMap<>();
 
-    public static void load(final Context ctx, final Callback callback) {
+    public static void load(final Context ctx, final Callback<Configuration> callback) {
         JSONObject config = LocalStorage.getJSON("vnw_api_config");
         long lastUpdate = LocalStorage.getLong("vnw_api_config_last_update", 0);
         boolean loadCache = false;
@@ -63,7 +63,7 @@ public class Configuration extends EntityX {
             try {
                 new Configuration();
                 instance.importFromJson(config);
-                callback.onCompleted(ctx, CallbackResult.success(instance));
+                callback.onCompleted(ctx, CallbackResult.<Configuration>success(instance));
                 loadCache = true;
             }catch (Exception E) {
                 loadCache = false;
@@ -71,22 +71,18 @@ public class Configuration extends EntityX {
         }
 
         if (!loadCache) {
-            VNWAPI.getConfiguration(ctx, new Callback() {
+            VNWAPI.getConfiguration(ctx, new Callback<Configuration>() {
                 @Override
                 public void onCompleted(Context context, CallbackResult result) {
                     if (result.hasError()) {
-                        callback.onCompleted(ctx, CallbackResult.error(result.getError()));
+                        callback.onCompleted(ctx, CallbackResult.<Configuration>error(result.getError()));
                     } else {
                         try {
-                            new Configuration();
-                            JSONObject res = (JSONObject) result.getData();
-                            JSONObject data = res.optJSONObject("data");
-                            instance.importFromJson(data);
                             LocalStorage.set("vnw_api_config_last_update", Common.getMillis());
                             LocalStorage.set("vnw_api_config", instance);
                             callback.onCompleted(ctx, CallbackResult.success(instance));
                         } catch (Exception E) {
-                            callback.onCompleted(ctx, CallbackResult.error(E.getMessage()));
+                            callback.onCompleted(ctx, CallbackResult.<Configuration>error(E.getMessage()));
                         }
                     }
                 }

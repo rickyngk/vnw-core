@@ -2,11 +2,8 @@ package vietnamworks.com.vnwcore.entities;
 
 import android.content.Context;
 
-import org.json.JSONObject;
-
 import R.helper.BindField;
 import R.helper.Callback;
-import R.helper.CallbackResult;
 import R.helper.EntityX;
 import vietnamworks.com.vnwcore.VNWAPI;
 
@@ -22,25 +19,8 @@ public class Job extends EntityX {
     @BindField("job_summary") JobSummary jobSummary;
     @BindField("job_company") Company company;
 
-    public static void loadById(Context ctx, String id, final Callback callback) {
-        VNWAPI.getJob(ctx, id, new Callback() {
-            @Override
-            public void onCompleted(Context context, CallbackResult result) {
-                if (result.hasError()) {
-                    callback.onCompleted(context, CallbackResult.error(result.getError()));
-                } else {
-                    try {
-                        JSONObject res = (JSONObject) result.getData();
-                        JSONObject data = res.optJSONObject("data");
-                        Job j = new Job();
-                        j.importFromJson(data);
-                        callback.onCompleted(context, CallbackResult.success(j));
-                    } catch (Exception E) {
-                        callback.onCompleted(context, CallbackResult.error(E.getMessage()));
-                    }
-                }
-            }
-        });
+    public static void loadById(Context ctx, String id, final Callback<Job> callback) {
+        VNWAPI.getJob(ctx, id, callback);
     }
 
     public JobDetail getJobDetail() {

@@ -15,13 +15,17 @@ import R.helper.Callback;
 import R.helper.CallbackResult;
 import R.helper.Common;
 import vietnamworks.com.vnwcore.entities.AppliedJob;
+import vietnamworks.com.vnwcore.entities.Configuration;
+import vietnamworks.com.vnwcore.entities.Job;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
+import vietnamworks.com.vnwcore.entities.JobSearchResult;
 import vietnamworks.com.vnwcore.errors.EUserProfileQueryError;
 import vietnamworks.com.vnwcore.matchingscore.MatchingScoreTable;
 import vietnamworks.com.volleyhelper.VolleyHelper;
 
 /**
  * Created by duynk on 1/6/16.
+ *
  */
 public class VNWAPI {
     private final static String productionServer = "https://api.vietnamworks.com";
@@ -59,7 +63,7 @@ public class VNWAPI {
         }
     }
 
-    public static void searchJob(Context ctx, int page_index, int page_size, @NonNull String job_title, String job_location, String job_category, Callback callback) {
+    public static void searchJob(Context ctx, int page_index, int page_size, @NonNull String job_title, String job_location, String job_category, final Callback<ArrayList<JobSearchResult>> callback) {
         HashMap<String, Object> input = new HashMap<>();
         input.put("job_title", job_title);
         if (job_location != null && !job_location.isEmpty()) {
@@ -75,14 +79,36 @@ public class VNWAPI {
             input.put("page_size", page_size);
         }
 
-        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_JOB_SEARCH, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_JOB_SEARCH, header, input, new Callback() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (result.hasError()) {
+                    callback.onCompleted(context, CallbackResult.<ArrayList<JobSearchResult>>error(result.getError()));
+                } else {
+                    ArrayList<JobSearchResult> ret = new ArrayList<JobSearchResult>();
+                    try {
+                        JSONObject res = (JSONObject) result.getData();
+                        JSONObject data = res.optJSONObject("data");
+                        JSONArray jobs = data.getJSONArray("jobs");
+                        for (int i = 0; i < jobs.length(); i++) {
+                            JobSearchResult j = new JobSearchResult();
+                            j.importFromJson(jobs.getJSONObject(i));
+                            ret.add(j);
+                        }
+                    } catch (Exception E) {
+                        callback.onCompleted(context, CallbackResult.<ArrayList<JobSearchResult>>error(E.getMessage()));
+                    }
+                    callback.onCompleted(context, CallbackResult.success(ret));
+                }
+            }
+        });
     }
 
-    public static void searchJob(Context ctx, int max_record, @NonNull String job_title, String job_location, String job_category, Callback callback) {
+    public static void searchJob(Context ctx, int max_record, @NonNull String job_title, String job_location, String job_category, Callback<ArrayList<JobSearchResult>> callback) {
         searchJob(ctx, 0, max_record, job_title, job_location, job_category, callback);
     }
 
-    public static void jobTitleSuggestion(Context ctx, @NonNull String jobTitle, final Callback callback) {
+    public static void jobTitleSuggestion(Context ctx, @NonNull String jobTitle, final Callback<ArrayList<String>> callback) {
         HashMap<String, String> m = new HashMap<>();
         m.put("query", jobTitle);
 
@@ -90,7 +116,7 @@ public class VNWAPI {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (result.hasError()) {
-                    callback.onCompleted(context, CallbackResult.error(result.getError()));
+                    callback.onCompleted(context, CallbackResult.<ArrayList<String>>error(result.getError()));
                 } else {
                     Object re = result.getData();
                     try {
@@ -102,21 +128,55 @@ public class VNWAPI {
                         }
                         callback.onCompleted(context, CallbackResult.success(arr));
                     } catch (Exception E) {
-                        callback.onCompleted(context, CallbackResult.error(E.getMessage()));
+                        callback.onCompleted(context, CallbackResult.<ArrayList<String>>error(E.getMessage()));
                     }
                 }
             }
         });
     }
 
-    public static void getJob(Context ctx, @NonNull String job_id, Callback callback) {
+    public static void getJob(Context ctx, @NonNull String job_id, final Callback<Job> callback) {
         HashMap<String, Object> input = new HashMap<>();
-        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + String.format(API_JOB_VIEW, job_id), header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + String.format(API_JOB_VIEW, job_id), header, input, new Callback<Job>() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (result.hasError()) {
+                    callback.onCompleted(context, CallbackResult.<Job>error(result.getError()));
+                } else {
+                    try {
+                        JSONObject res = (JSONObject) result.getData();
+                        JSONObject data = res.optJSONObject("data");
+                        Job j = new Job();
+                        j.importFromJson(data);
+                        callback.onCompleted(context, CallbackResult.success(j));
+                    } catch (Exception E) {
+                        callback.onCompleted(context, CallbackResult.<Job>error(E.getMessage()));
+                    }
+                }
+            }
+        });
     }
 
-    public static void getConfiguration(Context ctx, Callback callback) {
+    public static void getConfiguration(final Context ctx, final Callback<Configuration> callback) {
         HashMap<String, Object> input = new HashMap<>();
-        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_CONFIG, header, input, callback);
+        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_CONFIG, header, input, new Callback() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (result.hasError()) {
+                    callback.onCompleted(ctx, CallbackResult.<Configuration>error(result.getError()));
+                } else {
+                    try {
+                        new Configuration();
+                        JSONObject res = (JSONObject) result.getData();
+                        JSONObject data = res.optJSONObject("data");
+                        Configuration.instance.importFromJson(data);
+                        callback.onCompleted(ctx, CallbackResult.success(Configuration.instance));
+                    } catch (Exception E) {
+                        callback.onCompleted(ctx, CallbackResult.<Configuration>error(E.getMessage()));
+                    }
+                }
+            }
+        });
     }
 
     public static void logout(Context ctx, @NonNull String token,  Callback callback) {
@@ -149,7 +209,7 @@ public class VNWAPI {
         }
     }
 
-    public static void applyJob(Context context, JobApplyForm form, final Callback callback) {
+    public static void applyJob(Context context, JobApplyForm form, final Callback<Object> callback) {
         if (form.getFileContents() != null) {
             File f = new File(form.getFileContents());
             if (f.isFile()) {
@@ -207,7 +267,7 @@ public class VNWAPI {
         }
     }
 
-    public static void loadMatchingScore(Context ctx,@NonNull final String[] jobs, @NonNull final String userId, Callback callback) {
+    public static void loadMatchingScoreAsync(Context ctx, @NonNull final String[] jobs, @NonNull final String userId) {
         StringBuilder sb = new StringBuilder();
         String delim = "/?";
         for (String job:jobs) {
@@ -247,14 +307,15 @@ public class VNWAPI {
         });
     }
 
-
-    public static void getAppliedJobs(final Context ctx, final Callback callback) {
+    public static void getAppliedJobs(final Context ctx, final Callback<ArrayList<AppliedJob>> callback) {
         if (Auth.getAuthData() == null || Auth.getAuthData().getProfile() == null || Auth.getAuthData().getProfile().getLoginToken() == null || Auth.getAuthData().getProfile().getLoginToken().isEmpty()) {
-            callback.onCompleted(ctx, CallbackResult.error(EUserProfileQueryError.UN_AUTH));
+            ArrayList<AppliedJob> j = new ArrayList<AppliedJob>();
+            CallbackResult<ArrayList<AppliedJob>> c = CallbackResult.error(EUserProfileQueryError.UN_AUTH);
+            callback.onCompleted(ctx, c);
             return;
         }
         String url = String.format((isProduction ? productionServer : stagingServer) + API_APPLIED_JOBS, Auth.getAuthData().getProfile().getLoginToken());
-        VolleyHelper.get(ctx, url, header, new Callback() {
+        VolleyHelper.get(ctx, url, header, new Callback<ArrayList<AppliedJob>>() {
             @Override
             public void onCompleted(Context context, CallbackResult result) {
                 if (!result.hasError()) {
@@ -270,10 +331,12 @@ public class VNWAPI {
                         }
                         callback.onCompleted(ctx, CallbackResult.success(appliedJobs));
                     } catch (Exception E) {
-                        callback.onCompleted(ctx, CallbackResult.error(E.getMessage()));
+                        CallbackResult<ArrayList<AppliedJob>> c = CallbackResult.error(E.getMessage());
+                        callback.onCompleted(ctx, c);
                     }
                 } else {
-                    callback.onCompleted(ctx, CallbackResult.error(result.getError()));
+                    CallbackResult<ArrayList<AppliedJob>> c = CallbackResult.error(result.getError());
+                    callback.onCompleted(ctx, c);
                 }
             }
         });
