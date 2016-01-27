@@ -29,7 +29,7 @@ public class Auth {
                 if (result.hasError()) {
                     callback.onCompleted(context, CallbackResult.error(result.getError()));
                 } else {
-                    vietnamworks.com.vnwcore.entities.Auth auth = result.getData();
+                    auth = result.getData();
                     LocalStorage.set(LS_RECENT_EMAILS, LocalStorage.getString(LS_RECENT_EMAILS, "") + ";" + email);
                     recentEmails.clear();
                     getRecentEmails();
