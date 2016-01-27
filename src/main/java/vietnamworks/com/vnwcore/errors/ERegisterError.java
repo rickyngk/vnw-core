@@ -10,7 +10,8 @@ public enum ERegisterError implements CallbackResult.ICallbackError {
     EMPTY_EMAIL (10000),
     INVALID_EMAIL (10001),
     FIRST_NAME_MISSING (10002),
-    LAST_NAME_MISSING (10003)
+    LAST_NAME_MISSING (10003),
+    DUPLICATED (10004)
 
 
     ;

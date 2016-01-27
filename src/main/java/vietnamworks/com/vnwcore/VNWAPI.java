@@ -414,8 +414,28 @@ public class VNWAPI {
                             callback.onCompleted(context, CallbackResult.<Object>error(result.getError()));
                         }
                     } else {
-                        //TODO:
-                        System.out.println(result.getData());
+                        try {
+                            JSONObject data = (JSONObject) result.getData();
+                            JSONObject meta = data.getJSONObject("meta");
+                            String meta_code = meta.get("code").toString();
+                            String meta_message = meta.getString("message");
+
+                            if (meta_code.equalsIgnoreCase("200")) {
+                                //TODO
+                                JSONObject d = data.getJSONObject("data");
+                                System.out.println(d);
+                                callback.onCompleted(context, CallbackResult.success());
+                            } else {
+                                if (meta_message.equalsIgnoreCase("duplicated")) {
+                                    callback.onCompleted(context, CallbackResult.<Object>error(ERegisterError.DUPLICATED));
+                                } else {
+                                    callback.onCompleted(context, CallbackResult.<Object>error(meta_message));
+                                }
+                            }
+
+                        } catch (Exception E) {
+                            callback.onCompleted(context, CallbackResult.<Object>error(E.getMessage()));
+                        }
                     }
                 }
             });
