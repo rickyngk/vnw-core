@@ -2,73 +2,47 @@ package vietnamworks.com.vnwcore;
 
 import android.content.Context;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import R.helper.Callback;
 import R.helper.CallbackResult;
 import R.helper.CodecX;
-import R.helper.Common;
 import R.helper.LocalStorage;
 import vietnamworks.com.vnwcore.entities.Credential;
-import vietnamworks.com.vnwcore.errors.ELoginError;
 
 /**
  * Created by duynk on 1/20/16.
+ *
  */
 public class Auth {
+    private final static String LS_CURRENT_CREDENTIAL = "vnw_auth_current_credential";
+    private final static String LS_RECENT_EMAILS = "vnw_auth_recent_emails";
+
     private static ArrayList<String> recentEmails = new ArrayList<>();
     private static vietnamworks.com.vnwcore.entities.Auth auth;
 
-    public static void login(Context ctx, final String email, final String password, final Callback callback) {
-        if (email == null || email.isEmpty()) {
-            callback.onCompleted(ctx, CallbackResult.error(ELoginError.EMPTY_EMAIL));
-        } else if (!Common.isValidEmail(email)) {
-            callback.onCompleted(ctx, CallbackResult.error(ELoginError.INVALID_EMAIL));
-        } else if (password == null || password.isEmpty()) {
-            callback.onCompleted(ctx, CallbackResult.error(ELoginError.EMPTY_PASSWORD));
-        } else {
-            VNWAPI.login(ctx, email, password, new Callback() {
-                @Override
-                public void onCompleted(Context context, CallbackResult result) {
-                    if (result.hasError()) {
-                        callback.onCompleted(context, CallbackResult.error(result.getError()));
-                    } else {
-                        //save current account;
-                        try {
-                            JSONObject data = (JSONObject) result.getData();
-                            if (data.getJSONObject("meta").getString("message").equalsIgnoreCase("OK")) {
-                                auth = new vietnamworks.com.vnwcore.entities.Auth();
-                                auth.importFromJson(data.getJSONObject("data"));
+    public static void login(Context ctx, final String email, final String password, final Callback<Object> callback) {
+        VNWAPI.login(ctx, email, password, new Callback<vietnamworks.com.vnwcore.entities.Auth>() {
+            @Override
+            public void onCompleted(Context context, CallbackResult<vietnamworks.com.vnwcore.entities.Auth> result) {
+                if (result.hasError()) {
+                    callback.onCompleted(context, CallbackResult.error(result.getError()));
+                } else {
+                    vietnamworks.com.vnwcore.entities.Auth auth = result.getData();
+                    LocalStorage.set(LS_RECENT_EMAILS, LocalStorage.getString(LS_RECENT_EMAILS, "") + ";" + email);
+                    recentEmails.clear();
+                    getRecentEmails();
 
-                                LocalStorage.set("vnw_auth_current_account", data);
-
-                                LocalStorage.set("vnw_auth_recent_emails", LocalStorage.getString("vnw_auth_recent_emails", "") + ";" + email);
-                                recentEmails.clear();
-                                getRecentEmails();
-
-                                String epassword = CodecX.encode(password);
-                                LocalStorage.set("vnw_auth_current_credential", email + ";" + epassword);
-                                callback.onCompleted(context, CallbackResult.success());
-                            } else {
-                                if (data.getJSONObject("meta").getString("code").equalsIgnoreCase("200")) {
-                                    callback.onCompleted(context, CallbackResult.error(ELoginError.WRONG_CREDENTIAL));
-                                } else {
-                                    callback.onCompleted(context, CallbackResult.error());
-                                }
-                            }
-                        } catch (Exception E) {
-                            callback.onCompleted(context, CallbackResult.error(E.getMessage()));
-                        }
-                    }
-                    }
-            });
-        }
+                    String epassword = CodecX.encode(password);
+                    LocalStorage.set(LS_CURRENT_CREDENTIAL, email + ";" + epassword);
+                    callback.onCompleted(context, CallbackResult.success());
+                }
+            }
+        });
     }
 
-    public static void autoLogin(Context ctx, final Callback callback) {
+    public static void autoLogin(Context ctx, final Callback<Object> callback) {
         Credential credential = getCredential();
         if (credential == null) {
             callback.onCompleted(ctx, CallbackResult.error());
@@ -84,7 +58,7 @@ public class Auth {
     }
 
     public static Credential getCredential() {
-        String credential = LocalStorage.getString("vnw_auth_current_credential", null);
+        String credential = LocalStorage.getString(LS_CURRENT_CREDENTIAL, null);
         if (credential == null) {
             return null;
         } else {
@@ -96,15 +70,14 @@ public class Auth {
         }
     }
 
-    public static void logout() {
-        LocalStorage.remove("vnw_auth_current_account");
-        LocalStorage.remove("vnw_auth_current_credential");
+    public static void logout() {;
+        LocalStorage.remove(LS_CURRENT_CREDENTIAL);
         auth = null;
     }
 
     public static ArrayList<String> getRecentEmails() {
         if (recentEmails == null || recentEmails.isEmpty()) {
-            String strRecentEmail = LocalStorage.getString("vnw_auth_recent_emails", "");
+            String strRecentEmail = LocalStorage.getString(LS_RECENT_EMAILS, "");
             String []emails = strRecentEmail.split(";");
             HashMap<String, String> emailHash = new HashMap<String, String>();
             for (String e: emails) {
@@ -121,7 +94,7 @@ public class Auth {
                 recentEmails.add(k);
                 delim = ";";
             }
-            LocalStorage.set("vnw_auth_recent_emails", sb.toString());
+            LocalStorage.set(LS_RECENT_EMAILS, sb.toString());
         }
         return recentEmails;
     }

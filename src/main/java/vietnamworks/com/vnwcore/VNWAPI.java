@@ -19,6 +19,9 @@ import vietnamworks.com.vnwcore.entities.Configuration;
 import vietnamworks.com.vnwcore.entities.Job;
 import vietnamworks.com.vnwcore.entities.JobApplyForm;
 import vietnamworks.com.vnwcore.entities.JobSearchResult;
+import vietnamworks.com.vnwcore.entities.RegisterInfo;
+import vietnamworks.com.vnwcore.errors.ELoginError;
+import vietnamworks.com.vnwcore.errors.ERegisterError;
 import vietnamworks.com.vnwcore.errors.EUserProfileQueryError;
 import vietnamworks.com.vnwcore.matchingscore.MatchingScoreTable;
 import vietnamworks.com.volleyhelper.VolleyHelper;
@@ -39,6 +42,7 @@ public class VNWAPI {
     private final static String API_APPLY = "/jobs/applyAttach";
     private final static String API_MATCHING_SCORE = "/jobs/matching-score";
     private final static String API_APPLIED_JOBS = "/jobs/applied/token/%s";
+    private final static String API_REGISTER = "/users/registerWithoutConfirm";
 
     private static String stagingKey;
     private static String productionKey;
@@ -184,11 +188,43 @@ public class VNWAPI {
         VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + String.format(API_LOGOUT, token), header, input, callback);
     }
 
-    public static void login(Context ctx, @NonNull String email,  @NonNull String password, Callback callback) {
-        HashMap<String, Object> input = new HashMap<>();
-        input.put("user_email", email);
-        input.put("user_password", password);
-        VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_LOGIN, header, input, callback);
+    public static void login(Context ctx, String email, String password, final Callback<vietnamworks.com.vnwcore.entities.Auth> callback) {
+        if (email == null || email.isEmpty()) {
+            callback.onCompleted(ctx, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(ELoginError.EMPTY_EMAIL));
+        } else if (!Common.isValidEmail(email)) {
+            callback.onCompleted(ctx, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(ELoginError.INVALID_EMAIL));
+        } else if (password == null || password.isEmpty()) {
+            callback.onCompleted(ctx, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(ELoginError.EMPTY_PASSWORD));
+        } else {
+            HashMap<String, Object> input = new HashMap<>();
+            input.put("user_email", email);
+            input.put("user_password", password);
+            VolleyHelper.post(ctx, (isProduction ? productionServer : stagingServer) + API_LOGIN, header, input, new Callback() {
+                @Override
+                public void onCompleted(Context context, CallbackResult result) {
+                    if (result.hasError()) {
+                        callback.onCompleted(context, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(result.getError()));
+                    } else {
+                        try {
+                            JSONObject data = (JSONObject) result.getData();
+                            if (data.getJSONObject("meta").getString("message").equalsIgnoreCase("OK")) {
+                                vietnamworks.com.vnwcore.entities.Auth auth = new vietnamworks.com.vnwcore.entities.Auth();
+                                auth.importFromJson(data.getJSONObject("data"));
+                                callback.onCompleted(context, CallbackResult.success(auth));
+                            } else {
+                                if (data.getJSONObject("meta").getString("code").equalsIgnoreCase("200")) {
+                                    callback.onCompleted(context, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(ELoginError.WRONG_CREDENTIAL));
+                                } else {
+                                    callback.onCompleted(context, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error());
+                                }
+                            }
+                        } catch (Exception E) {
+                            callback.onCompleted(context, CallbackResult.<vietnamworks.com.vnwcore.entities.Auth>error(E.getMessage()));
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private static void updateToken(JSONObject response) {
@@ -340,5 +376,49 @@ public class VNWAPI {
                 }
             }
         });
+    }
+
+    public static void register(final Context ctx, RegisterInfo info, final Callback<Object> callback) {
+        if (info.getEmail() == null || info.getEmail().isEmpty()) {
+            callback.onCompleted(ctx, CallbackResult.error(ERegisterError.EMPTY_EMAIL));
+        } else if (!Common.isValidEmail(info.getEmail())) {
+            callback.onCompleted(ctx, CallbackResult.error(ERegisterError.INVALID_EMAIL));
+        } else if (info.getFirstName() == null || info.getFirstName().isEmpty()) {
+            callback.onCompleted(ctx, CallbackResult.error(ERegisterError.FIRST_NAME_MISSING));
+        } else if (info.getLastName() == null || info.getLastName().isEmpty()) {
+            callback.onCompleted(ctx, CallbackResult.error(ERegisterError.LAST_NAME_MISSING));
+        } else {
+            HashMap<String, Object> registerInfo = new HashMap<>();
+            try {
+                registerInfo = info.exportToHashMap();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String url = (isProduction ? productionServer : stagingServer) + API_REGISTER;
+            VolleyHelper.post(ctx, url, header, registerInfo, new Callback() {
+                @Override
+                public void onCompleted(Context context, CallbackResult result) {
+                    if (result.hasError()) {
+                        String message = "";
+                        try {
+                            String tmpMessage = result.getError().getMessage();
+                            JSONObject json = new JSONObject(tmpMessage);
+                            JSONObject meta = json.getJSONObject("meta");
+                            message = meta.getString("message");
+                        } catch (Exception E) {
+                            message = "";
+                        }
+                        if (message.isEmpty()) {
+                            callback.onCompleted(context, CallbackResult.<Object>error(result.getError()));
+                        } else {
+                            callback.onCompleted(context, CallbackResult.<Object>error(result.getError()));
+                        }
+                    } else {
+                        //TODO:
+                        System.out.println(result.getData());
+                    }
+                }
+            });
+        }
     }
 }
