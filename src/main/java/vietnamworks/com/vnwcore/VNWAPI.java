@@ -250,23 +250,10 @@ public class VNWAPI {
         if (form.getFileContents() != null) {
             File f = new File(form.getFileContents());
             if (f.isFile()) {
-                HashMap<String, Object> input = new HashMap<>();
-                if (form.getApplicationSubject() != null) {
-                    input.put("application_subject", form.getApplicationSubject());
-                }
-                if (form.getCoverLetter() != null) {
-                    input.put("cover_letter", form.getCoverLetter());
-                }
-                if (form.getLang() != null) {
-                    input.put("lang", form.getLang().toString());
-                }
-                if (form.getJobId() != null) {
-                    input.put("job_id", form.getJobId().toString());
-                }
+                HashMap<String, Object> input = form.exportToHashMapUnsafe();
                 input.put("email", form.getCredential().getEmail());
                 input.put("password", form.getCredential().getPassword());
 
-                //String url = "http://172.18.5.124/test.php";
                 String url = (isProduction ? productionServer : stagingServer) + API_APPLY;
                 VolleyHelper.postMultiPart(context, url, header, "file_contents", f, input, new Callback() {
                     @Override
@@ -299,8 +286,44 @@ public class VNWAPI {
                 callback.onCompleted(context, CallbackResult.error("Invalid file"));
             }
         } else {
-            //TODO: apply job with old resume
-            callback.onCompleted(context, CallbackResult.error("Not support yet"));
+            HashMap<String, Object> tmp = form.exportToHashMapUnsafe();
+            HashMap<String, String> input = new HashMap<>();
+            input.put("email", form.getCredential().getEmail());
+            input.put("password", form.getCredential().getPassword());
+            for (String k: tmp.keySet()) {
+                input.put(k, tmp.get(k).toString());
+            }
+
+            String url = (isProduction ? productionServer : stagingServer) + API_APPLY;
+            VolleyHelper.stringRequest(context, url, header, input, new Callback() {
+                @Override
+                public void onCompleted(Context context, CallbackResult result) {
+                    if (result.hasError()) {
+                        String message = "";
+                        try {
+                            String tmpMessage = result.getError().getMessage();
+                            JSONObject json = new JSONObject(tmpMessage);
+                            JSONObject meta = json.getJSONObject("meta");
+                            message = meta.getString("message");
+                        } catch (Exception E) {
+                            message = "";
+                        }
+                        if (message.isEmpty()) {
+                            callback.onCompleted(context, CallbackResult.error(result.getError()));
+                        } else {
+                            callback.onCompleted(context, CallbackResult.error(result.getError()));
+                        }
+                    } else {
+                        try {
+                            JSONObject json = new JSONObject(result.getData().toString());
+                            updateToken(json);
+                            callback.onCompleted(context, CallbackResult.success());
+                        } catch (Exception E) {
+                            callback.onCompleted(context, CallbackResult.error(E.getMessage()));
+                        }
+                    }
+                }
+            });
         }
     }
 

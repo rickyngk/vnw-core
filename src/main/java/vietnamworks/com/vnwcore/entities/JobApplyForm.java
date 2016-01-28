@@ -8,13 +8,13 @@ import R.helper.EntityX;
  */
 public class JobApplyForm extends EntityX {
     @BindField("job_id") Integer jobId;
-    @BindField("file_contents") String fileContents;
     @BindField("resume_attach_id") String resumeAttachId;
     @BindField("application_subject") String applicationSubject;
     @BindField("cover_letter") String coverLetter;
     @BindField("lang") Integer lang;
-    @BindField("token") String token;
-    @BindField("credential") Credential credential;
+    String fileContents;
+    String token;
+    Credential credential;
 
     public JobApplyForm(){super();}
 
@@ -37,7 +37,7 @@ public class JobApplyForm extends EntityX {
     public String getResumeAttachId() {
         return resumeAttachId;
     }
-
+    
     public void setResumeAttachId(String resumeAttachId) {
         this.resumeAttachId = resumeAttachId;
     }
