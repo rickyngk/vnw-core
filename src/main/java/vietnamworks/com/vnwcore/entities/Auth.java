@@ -12,6 +12,7 @@ public class Auth extends EntityX {
     @BindField("profile") Profile profile;
     @BindField("coverletter") String coverLetter;
     @BindField("resumes") AuthResume resume;
+    private String attachmentResumeId = "";
 
     public Profile getProfile() {
         return profile;
@@ -35,5 +36,13 @@ public class Auth extends EntityX {
 
     public void setResume(AuthResume resume) {
         this.resume = resume;
+    }
+
+    public String getAttachmentResumeId() {
+        return attachmentResumeId;
+    }
+
+    public void setAttachmentResumeId(String attachmentResumeId) {
+        this.attachmentResumeId = attachmentResumeId;
     }
 }

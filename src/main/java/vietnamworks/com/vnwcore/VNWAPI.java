@@ -43,6 +43,7 @@ public class VNWAPI {
     private final static String API_MATCHING_SCORE = "/jobs/matching-score";
     private final static String API_APPLIED_JOBS = "/jobs/applied/token/%s";
     private final static String API_REGISTER = "/users/registerWithoutConfirm";
+    private final static String API_GET_ATTACHMENT = "/users/attachment-resume/token/%s";
 
     private static String stagingKey;
     private static String productionKey;
@@ -344,7 +345,7 @@ public class VNWAPI {
     }
 
     public static void getAppliedJobs(final Context ctx, final Callback<ArrayList<AppliedJob>> callback) {
-        if (Auth.getAuthData() == null || Auth.getAuthData().getProfile() == null || Auth.getAuthData().getProfile().getLoginToken() == null || Auth.getAuthData().getProfile().getLoginToken().isEmpty()) {
+        if (!Auth.hasLogin()) {
             ArrayList<AppliedJob> j = new ArrayList<AppliedJob>();
             CallbackResult<ArrayList<AppliedJob>> c = CallbackResult.error(EUserProfileQueryError.UN_AUTH);
             callback.onCompleted(ctx, c);
@@ -440,5 +441,32 @@ public class VNWAPI {
                 }
             });
         }
+    }
+
+    public static void getUserAttachmentId(final Context ctx, final Callback<String> callback) {
+        if (!Auth.hasLogin()) {
+            callback.onCompleted(ctx, CallbackResult.<String>error(EUserProfileQueryError.UN_AUTH));
+            return;
+        }
+        String url = String.format((isProduction ? productionServer : stagingServer) + API_GET_ATTACHMENT, Auth.getAuthData().getProfile().getLoginToken());
+        VolleyHelper.get(ctx, url, header, new Callback<ArrayList<AppliedJob>>() {
+            @Override
+            public void onCompleted(Context context, CallbackResult result) {
+                if (!result.hasError()) {
+                    try {
+                        JSONObject data = (JSONObject)result.getData();
+                        updateToken(data);
+                        String resumeId = data.getJSONObject("data").getString("resumeId");
+                        callback.onCompleted(ctx, CallbackResult.success(resumeId));
+                    } catch (Exception E) {
+                        CallbackResult<String> c = CallbackResult.error(E.getMessage());
+                        callback.onCompleted(ctx, c);
+                    }
+                } else {
+                    CallbackResult<String> c = CallbackResult.error(result.getError());
+                    callback.onCompleted(ctx, c);
+                }
+            }
+        });
     }
 }

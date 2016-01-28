@@ -22,10 +22,10 @@ public class Auth {
     private static ArrayList<String> recentEmails = new ArrayList<>();
     private static vietnamworks.com.vnwcore.entities.Auth auth;
 
-    public static void login(Context ctx, final String email, final String password, final Callback<Object> callback) {
+    public static void login(final Context ctx, final String email, final String password, final Callback<Object> callback) {
         VNWAPI.login(ctx, email, password, new Callback<vietnamworks.com.vnwcore.entities.Auth>() {
             @Override
-            public void onCompleted(Context context, CallbackResult<vietnamworks.com.vnwcore.entities.Auth> result) {
+            public void onCompleted(final Context context, CallbackResult<vietnamworks.com.vnwcore.entities.Auth> result) {
                 if (result.hasError()) {
                     callback.onCompleted(context, CallbackResult.error(result.getError()));
                 } else {
@@ -36,7 +36,15 @@ public class Auth {
 
                     String epassword = CodecX.encode(password);
                     LocalStorage.set(LS_CURRENT_CREDENTIAL, email + ";" + epassword);
-                    callback.onCompleted(context, CallbackResult.success());
+                    VNWAPI.getUserAttachmentId(context, new Callback<String>() {
+                        @Override
+                        public void onCompleted(Context context, CallbackResult<String> result) {
+                            if (!result.hasError()) {
+                                auth.setAttachmentResumeId(result.getData());
+                            }
+                            callback.onCompleted(context, CallbackResult.success());
+                        }
+                    });
                 }
             }
         });
@@ -101,5 +109,9 @@ public class Auth {
 
     public static vietnamworks.com.vnwcore.entities.Auth getAuthData() {
         return auth;
+    }
+
+    public static boolean hasLogin() {
+        return getAuthData() == null || getAuthData().getProfile() == null || getAuthData().getProfile().getLoginToken() == null || getAuthData().getProfile().getLoginToken().isEmpty();
     }
 }
