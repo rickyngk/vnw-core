@@ -5,6 +5,7 @@ import R.helper.EntityX;
 
 /**
  * Created by duynk on 1/21/16.
+ *
  */
 public class JobApplyForm extends EntityX {
     @BindField("job_id") Integer jobId;
@@ -37,7 +38,7 @@ public class JobApplyForm extends EntityX {
     public String getResumeAttachId() {
         return resumeAttachId;
     }
-    
+
     public void setResumeAttachId(String resumeAttachId) {
         this.resumeAttachId = resumeAttachId;
     }
