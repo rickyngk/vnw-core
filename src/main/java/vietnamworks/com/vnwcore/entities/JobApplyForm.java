@@ -9,7 +9,7 @@ import R.helper.EntityX;
 public class JobApplyForm extends EntityX {
     @BindField("job_id") Integer jobId;
     @BindField("file_contents") String fileContents;
-    @BindField("resume_attach_id") Integer resumeAttachId;
+    @BindField("resume_attach_id") String resumeAttachId;
     @BindField("application_subject") String applicationSubject;
     @BindField("cover_letter") String coverLetter;
     @BindField("lang") Integer lang;
@@ -34,11 +34,11 @@ public class JobApplyForm extends EntityX {
         this.fileContents = fileContents;
     }
 
-    public Integer getResumeAttachId() {
+    public String getResumeAttachId() {
         return resumeAttachId;
     }
 
-    public void setResumeAttachId(Integer resumeAttachId) {
+    public void setResumeAttachId(String resumeAttachId) {
         this.resumeAttachId = resumeAttachId;
     }
 
