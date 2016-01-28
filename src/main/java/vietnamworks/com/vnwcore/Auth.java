@@ -112,6 +112,6 @@ public class Auth {
     }
 
     public static boolean hasLogin() {
-        return getAuthData() == null || getAuthData().getProfile() == null || getAuthData().getProfile().getLoginToken() == null || getAuthData().getProfile().getLoginToken().isEmpty();
+        return getAuthData() != null && getAuthData().getProfile() != null && getAuthData().getProfile().getLoginToken() != null && !getAuthData().getProfile().getLoginToken().isEmpty();
     }
 }
