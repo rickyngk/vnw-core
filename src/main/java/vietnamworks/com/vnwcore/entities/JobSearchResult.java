@@ -151,14 +151,6 @@ public class JobSearchResult extends EntityX {
         this.applied = applied;
     }
 
-    public String getJobLocation() {
-        return jobLocation;
-    }
-
-    public void setJobLocation(String jobLocation) {
-        this.jobLocation = jobLocation;
-    }
-
     public String getSalary() {
         return salary;
     }
